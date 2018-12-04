@@ -1,5 +1,6 @@
 from alice import *
 
+
 def train_model(model, data, learning_rate=.005, epochs_number=int(1e6), gen_error_flag=False):
     """Train model and plot loss and N_Delta"""
     optimizer, scheduler = optimizer_init(model.model, learning_rate, optimizer_name='Adam', scheduler_name='StepLR',

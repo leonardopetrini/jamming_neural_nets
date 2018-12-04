@@ -1,4 +1,4 @@
-from classes import *
+from experiment import Experiment
 
 L = 3
 r_min = 0.1

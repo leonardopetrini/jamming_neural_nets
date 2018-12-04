@@ -1,14 +1,12 @@
 import os
 import numpy as np
+
 import matplotlib
-
-
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.style
 import matplotlib as mpl
-
-
-from mpl_toolkits.mplot3d import Axes3D
+mpl.style.use('seaborn-muted')  # muted
 
 import torch
 from torch import nn
@@ -19,12 +17,8 @@ import pickle
 import sklearn.manifold
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
-from scipy.optimize import fsolve
+from time import gmtime, strftime
 
-from time import gmtime, strftime, time
-
-mpl.style.use('seaborn-muted')  # muted
-matplotlib.use('Agg')
 
 print('Starting... @ ' + strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
