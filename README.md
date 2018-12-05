@@ -2,6 +2,8 @@
 
 Study of neural networks around jamming transition at maximum storage capacity
 
+### TODO: properly comment code
+
  - `main*.py` files are examples of how to execute the code
  
  - `alice.py` contains all the useful functions
