@@ -4,7 +4,8 @@ import copy
 import torch
 import torch.utils.data
 
-class DatasetClass(torch.utils.data.Dataset):
+
+class DatasetClass:
     """Characterizes a dataset for PyTorch"""
 
     def __init__(self, P, d, main_dir):
@@ -36,14 +37,12 @@ class DatasetClass(torch.utils.data.Dataset):
 
         # Read dimension of first layer
         for name, param in model.named_parameters():
-            print(param.shape)
             d = param.shape[1]
             break
 
         D_list = [self.D[:,:d]]
 
         for layer in model:
-            print(layer)
             D_list.append(layer(D_list[-1]))
 
         self.length = len(D_list)
@@ -51,10 +50,11 @@ class DatasetClass(torch.utils.data.Dataset):
         for layer in range(1, len(D_list)):
             torch.save(D_list[layer].detach(), self.main_dir + f'/data/D{layer}.pt')
 
-        del self.D, model
+        del self.D, self.labels, model
 
     def load(self, layer):
         self.D = torch.load(self.main_dir + f'/data/D{layer}.pt')
+        self.labels = torch.load(self.main_dir + f'/data/labels.pt')
         self.d = self.D.shape[1]
 
     def __len__(self):
@@ -68,32 +68,6 @@ class DatasetClass(torch.utils.data.Dataset):
             for i in range(int(self.P / self.batch_size)):
                 yield self.D[i*self.batch_size:min(self.P, (i+1)*self.batch_size), :self.d].cuda(), \
                       self.labels[i*self.batch_size:min(self.P, (i+1)*self.batch_size), :].cuda()
-
-
-class ResultsClass:
-    def __init__(self, main_dir):
-        self.main_dir = main_dir
-        self.results = {}
-        self.dict = {'loss': [],
-                     'N': [],
-                     'N_delta': [],
-                     'r': [],
-                     'gen_error': []}
-
-        self.results['D0'] = copy.deepcopy(self.dict)
-
-    def new_results(self, name):
-        """Instanciate new results entry with key = name and return it"""
-        self.results[name] = copy.deepcopy(self.dict)
-        return self.results[name]
-
-    def save(self):
-        pickle_save(self.results, 'results', self.main_dir)
-
-    def load(self):
-        self.results = pickle_load('results', self.main_dir)
-
-
 
 
 class ModelClass:
@@ -147,14 +121,13 @@ class Triangular(ModelClass):
         self.reduce_step = 0
         self.delta_h = 20
         self.l_size = self.layers_sizes()
-        print(self.h, self.l_size)
 
     def reduce(self, steps=1):
         self.h -= steps
         self.l_size = self.layers_sizes()
 
     def lr(self):
-        return 0.5 * self.h ** 1.5
+        return 0.1 / self.h
 
     def layers_sizes(self):
         return np.asarray([self.delta_h*l for l in range(int(self.h/self.delta_h)-1)])
@@ -195,3 +168,27 @@ class Rectangular(ModelClass):
 
     def reduce(self, steps=1):
         self.h -= steps
+
+
+class ResultsClass:
+    def __init__(self, main_dir):
+        self.main_dir = main_dir
+        self.results = {}
+        self.dict = {'loss': [],
+                     'N': [],
+                     'N_delta': [],
+                     'r': [],
+                     'gen_error': []}
+
+        self.results['D0'] = copy.deepcopy(self.dict)
+
+    def new_results(self, name):
+        """Instanciate new results entry with key = name and return it"""
+        self.results[name] = copy.deepcopy(self.dict)
+        return self.results[name]
+
+    def save(self):
+        pickle_save(self.results, 'results', self.main_dir)
+
+    def load(self):
+        self.results = pickle_load('results', self.main_dir)

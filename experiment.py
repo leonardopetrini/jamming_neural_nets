@@ -33,7 +33,6 @@ class Experiment:
         self.results = ResultsClass(self.main_dir)
 
     def save(self):
-        del self.dataset.D, self.dataset.labels
         pickle_save(self.__dict__, 'experiment', self.main_dir)
 
     def load(self):
@@ -50,11 +49,14 @@ class Experiment:
         if L == 0:
             L = self.L - layer_to_train
 
-        print(f'\n\n>>> FINDING TRANSITION FOR D{layer_to_train} WITH {L} LAYERS <<<')
+        print(f'\n\n>>> FINDING TRANSITION FOR D{layer_to_train} <<<')
 
         self.dataset.load(layer_to_train)
 
         results_label = f'D{layer_to_train}'
+
+        if gen_error_flag:
+            results_label += 'ge'
 
         # If P is varying from initial, keep track in results
         if P:
@@ -90,7 +92,7 @@ class Experiment:
 
             loss, N_delta, model, gen_error = train_model(model,
                                                           self.dataset,
-                                                          learning_rate= model.lr(),
+                                                          learning_rate=model.lr(),
                                                           epochs_number=int(1e6),
                                                           gen_error_flag=gen_error_flag)
 
@@ -114,7 +116,7 @@ class Experiment:
             results_dict['N'].append(model.N)
             results_dict['r'].append(r)
 
-            if not d and self.datatype == 'ov':
+            if (not d and self.datatype == 'ov') or gen_error_flag:
                 # Dont need to find jamming, no jamming_margin needed
                 jamming_margin = -1
                 break
