@@ -15,4 +15,4 @@ Study of neural networks around jamming transition at maximum storage capacity
  - `experiment.py` defines the experiment and finds the jamming transition 
 
 
-:penguin:
+:snowflake:
