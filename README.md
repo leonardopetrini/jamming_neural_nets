@@ -14,7 +14,15 @@ Study of neural networks around jamming transition at maximum storage capacity.
       
       - **ResultsClass:** store results for each experiment
       
- - `experiment.py` defines the experiment and finds the jamming transition 
+ - `experiment.py` defines the experiment and finds the jamming transition.
+ Each experiment is saved in a folder whose name refers to all the experiment parameters as
+ briefly explained in Experiment's docstring:
+ 
+       /recNet_ovL05P8192r1.0/
+                             /figures/
+                                     /loss
+                             /models
+                             /data
 
 ## Conventions
 
@@ -30,4 +38,3 @@ Study of neural networks around jamming transition at maximum storage capacity.
     [1] *The jamming transition as a paradigm to understand the loss landscape of deep neural networks* [arXiv reference](https://arxiv.org/abs/1809.09349)
 
     M. Geiger, S. Spigler, S. d'Ascoli, L. Sagun, M. Baity-Jesi, G. Biroli, M. Wyart.
-

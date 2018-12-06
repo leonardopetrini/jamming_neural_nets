@@ -1,4 +1,6 @@
 from classes import *
+from alice import *
+from train import *
 
 
 class Experiment:
@@ -47,7 +49,6 @@ class Experiment:
             self.networktype = 'rectangular'
 
         self.r_min = r_min
-
 
         self.main_dir = f'{self.networktype[:3]}Net_{datatype}L{L:02}P{P:05}r{r_min:0.1f}'
         make_dir(self.main_dir)

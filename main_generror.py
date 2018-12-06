@@ -1,7 +1,6 @@
 from experiment import Experiment
-import numpy as np
 
-L = 7
+L = 8
 r_min = 1
 P = int(2 ** 13)  # int(2**20)
 
@@ -22,16 +21,17 @@ exp1.find_transition(r_min,
 
 exp1.save()
 
-for l in range(4, len(exp1.dataset)-1):
+for l in range(1, len(exp1.dataset)-1):
 
-    exp1.find_transition(r_min=r,
+    exp1.find_transition(r_min=1,
                          P=0,
                          L=4,
                          layer_to_train=l,
                          jamming_margin=2,
                          gen_error_flag=True)
     exp1.save()
-    exp1.find_transition(r_min=2.8,
+
+    exp1.find_transition(r_min=2.5,
                          P=0,
                          L=4,
                          layer_to_train=l,
