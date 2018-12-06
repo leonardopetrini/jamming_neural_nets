@@ -1,4 +1,5 @@
-from experiment import Experiment
+"""Version of the main file for huge P to obtain the plot N vs P"""
+from experiment import *
 
 L = 3
 r_min = 1.8

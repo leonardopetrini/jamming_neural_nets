@@ -1,4 +1,5 @@
-from experiment import Experiment
+"""Version of the main file to study generalization error"""
+from experiment import *
 
 L = 8
 r_min = 1

@@ -72,12 +72,12 @@ class Experiment:
         self.__dict__ = pickle_load('experiment', self.main_dir)
 
     @timeit
-    def find_transition(self,r_min,
-                        P=0,
-                        L=0,
-                        layer_to_train=0,
-                        jamming_margin=2,
-                        gen_error_flag=False):
+    def find_transition(self, r_min: float,
+                        P: int = 0,
+                        L: int = 0,
+                        layer_to_train: int = 0,
+                        jamming_margin: int = 2,
+                        gen_error_flag: bool = False) -> None:
 
         """Find jamming transition for specified parameters.
 

@@ -1,4 +1,6 @@
-from experiment import Experiment
+"""Version of the main file to use triangular networks"""
+
+from experiment import *
 
 L = 3
 r_min = 5
