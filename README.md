@@ -27,7 +27,7 @@ Study of neural networks around jamming transition at maximum storage capacity.
 :snowflake:
 
 
-[1] *The jamming transition as a paradigm to understand the loss landscape of deep neural networks* [arXiv reference](https://arxiv.org/abs/1809.09349)
+ [1] *The jamming transition as a paradigm to understand the loss landscape of deep neural networks* [arXiv reference] (https://arxiv.org/abs/1809.09349)
 
-M. Geiger, S. Spigler, S. d'Ascoli, L. Sagun, M. Baity-Jesi, G. Biroli, M. Wyart.
+ M. Geiger, S. Spigler, S. d'Ascoli, L. Sagun, M. Baity-Jesi, G. Biroli, M. Wyart.
 
