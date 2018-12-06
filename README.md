@@ -2,8 +2,6 @@
 
 Study of neural networks around jamming transition at maximum storage capacity
 
-### TODO: properly comment code
-
  - `main*.py` files are examples of how to execute the code
  
  - `alice.py` contains   all the useful functions
@@ -23,6 +21,5 @@ Study of neural networks around jamming transition at maximum storage capacity
  - `L` denotes the number of layers in a net
  - `N` denotes the total number of parameters in a net
  - `r = P/N` is the order parameter of the jamming transition for NNs 
- - 
 
 :snowflake:
