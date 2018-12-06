@@ -1,6 +1,8 @@
 # Jamming transitions in Neural Nets
 
-Study of neural networks around jamming transition at maximum storage capacity
+Study of neural networks around jamming transition at maximum storage capacity.
+
+*This project is based on [1].* 
 
  - `main*.py` files are examples of how to execute the code
  
@@ -23,3 +25,9 @@ Study of neural networks around jamming transition at maximum storage capacity
  - `r = P/N` is the order parameter of the jamming transition for NNs 
 
 :snowflake:
+
+
+[1] *The jamming transition as a paradigm to understand the loss landscape of deep neural networks* [arXiv reference](https://arxiv.org/abs/1809.09349)
+
+M. Geiger, S. Spigler, S. d'Ascoli, L. Sagun, M. Baity-Jesi, G. Biroli, M. Wyart.
+
