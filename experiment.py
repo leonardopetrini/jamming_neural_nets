@@ -2,6 +2,37 @@ from classes import *
 
 
 class Experiment:
+    """Main class used to define an experiment with input parameters:
+
+        - P, defining the number of samples in the dataset
+
+        - datatype, > if 'ov' the first model is trained on D0 on the SAT phase (depending on r_min)
+            i.e. we are in the over-parametrized phase. Data-sets extracted from activations are 'well' structured;
+                    > if 'rc' we find the jamming for D0 and all the activation data-sets are extracted
+                    in that condition and hence don't exhibit much structure.
+
+        - networktype ['rectangular' or 'triangular'] defines the shape of the network employed.
+            for specific info see Rectangular and Triangular classes.
+
+        - r_min = P / N_max determines the maximum size (N_max) of the models employed.
+            If datatype == 'ov' this r also defines the point in the SAT phase we are working at;
+            if datatype == 'rc', N_max is reduced - i.e. the network size is reduced -
+                until we reach N* jamming point.
+
+        - L is defined only in case Rectangular networks are employed and defines their size.
+            The number of layers in triangular nets automatically defined given the size, cfr. Triangular class.
+
+
+        The experiment is saved in self.main_dir which specifies all relevant parameters.
+                e.g.  for rectangular net, SAT phase, P = 2^13, L = 5, r_min = 1.0 we have
+
+                    ../recNet_ovL05P8192r1.0/
+                                            /figures/
+                                                    /loss
+                                            /models
+                                            /data
+
+        """
 
     def __init__(self, P, datatype, networktype, r_min,
                  L = 0, new_data=True):
@@ -10,20 +41,21 @@ class Experiment:
         self.L = L
         self.datatype = datatype
 
-        if 'ria' in networktype:
-            self.networktype = 'Triangular'
+        if 'ri' in networktype:
+            self.networktype = 'triangular'
         else:
-            self.networktype = 'Rectangular'
+            self.networktype = 'rectangular'
 
         self.r_min = r_min
 
-        self.main_dir = f'{networktype}Net_{datatype}L{L:02}P{P:05}r{r_min:0.1f}'
+
+        self.main_dir = f'{self.networktype[:3]}Net_{datatype}L{L:02}P{P:05}r{r_min:0.1f}'
         make_dir(self.main_dir)
 
-        if 'ria' in networktype:
+        if self.networktype == 'triangular':
             d_max = find_h_triangular_net(P/r_min) + 1
         else:
-            d_max = find_h(0, self.L, self.P, self.r_min) + 1
+            d_max = find_h_rectangular_net(0, self.L, self.P, self.r_min) + 1
 
         self.dataset = DatasetClass(P, d_max, self.main_dir)
 
@@ -38,12 +70,26 @@ class Experiment:
     def load(self):
         self.__dict__ = pickle_load('experiment', self.main_dir)
 
+    @timeit
     def find_transition(self,r_min,
                         P=0,
                         L=0,
                         layer_to_train=0,
                         jamming_margin=2,
                         gen_error_flag=False):
+
+        """Find jamming transition for specified parameters.
+
+        If P is given and < self.P, the input is subsampled.
+        If L is given and rectangular nets are employed, L hidden layers are used independently on
+            the layer trained. Otherwise, if training a layer Dn, the network used is the residual from the
+            original starting from layer n .
+        layer_to_train = n defines Dn, the layer used in the training.
+        jamming_margin is the number of steps into the UNSAT phase we do before declaring the jamming found.
+        NOTE: taking steps into the UNSAT phase is very expensive in computational time!
+        If gen_error_flag == True, the input is split into 80% - 20% to have a training and test set and gen_error is
+        computed. Results are stored with ResultsClass, as for the rest (cfr. ResultsClass).
+        """
 
         # For rectangular net define L
         if L == 0:
@@ -56,14 +102,18 @@ class Experiment:
         results_label = f'D{layer_to_train}'
 
         if gen_error_flag:
+            # If also gen_error is computed add the information to the results keys
             results_label += 'ge'
 
         # If P is varying from initial, keep track in results
         if P:
+            # If a different P is employed, add information to the results keys
             results_label += f'P{P}'
             self.dataset.P = P
         else:
             P = self.P
+
+        # Add a new entry to the results dictionary
         results_dict = self.results.new_results(results_label)
 
         if layer_to_train == 0:
@@ -79,6 +129,7 @@ class Experiment:
         UNSATFlag = 0
 
         while UNSATFlag < jamming_margin:
+            # FINDING TRANSITION...
 
             model.new()
 
@@ -90,16 +141,18 @@ class Experiment:
             model.print_structure()
             print(f'\n  - N = {model.N}, P = {P}, r = {r:0.4f}')
 
-            loss, N_delta, model, gen_error = train_model(model,
+            # Train current model
+            loss, N_delta, gen_error, model = train_model(model,
                                                           self.dataset,
                                                           learning_rate=model.lr(),
                                                           epochs_number=int(1e6),
                                                           gen_error_flag=gen_error_flag)
 
+            # Always save running loss and N_delta
             plt.savefig(f'{self.main_dir}/figures/loss/L{L}N{model.N}P{self.P}.png', format='png')
             plt.close('all')
 
-            # Continue increasing r until it finds transition. Take 3 points after and stop
+            # Continue increasing r until it finds transition. Take jamming_margin points after and stop
             if N_delta > 0.0021 * P:
                 UNSATFlag += 1
             else:
@@ -127,4 +180,5 @@ class Experiment:
 
         # If training the first layer construct dataset from activations
         if d == 0:
-            self.dataset.build_dataset(model.N_list[-jamming_margin-1])
+            results_dict['Ns_jamming'] = self.dataset.build_dataset(model.N_list[-jamming_margin-1])
+

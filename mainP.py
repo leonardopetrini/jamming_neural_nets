@@ -2,7 +2,7 @@ from experiment import Experiment
 
 L = 3
 r_min = 1.8
-P = int(2**19.5)
+P = int(2**20)
 
 parameters = {'P': P,
               'datatype': 'ov',

@@ -2,7 +2,15 @@ from alice import *
 
 
 def train_model(model, data, learning_rate=.005, epochs_number=int(1e6), gen_error_flag=False):
-    """Train model and plot loss and N_Delta"""
+    """Train model with data and plot running loss and N_Delta.
+
+    If gen_error_flag == True splits data in 80% training and 20% test sets;
+    Optimizer: Adam;
+    Learning rate is diveded by 3 at 1/3 and 2/3 of epochs_number.
+
+    Early stop is N_delta is small (i.e. 0.2% * P).
+
+    Returns values of loss, N_delta, gen_error and the trained model at the last epoch."""
     optimizer, scheduler = optimizer_init(model.model, learning_rate, optimizer_name='Adam', scheduler_name='StepLR',
                                           epochs_number=epochs_number)
     running_loss = []
@@ -40,14 +48,17 @@ def train_model(model, data, learning_rate=.005, epochs_number=int(1e6), gen_err
         with torch.no_grad():
             gen_error = ((model(test_) * test_labels) < 0).float().mean()
             gen_error = gen_error.item()
-            print('Generalization error = {:0.1f} %'.format(gen_error * 100))
+            print('Generalization error = {:0.3f} %'.format(gen_error * 100))
 
     plot_loss_N_delta(running_loss, running_N_delta)
 
-    return loss.item(), N_delta.item(), model, gen_error
+    return loss.item(), N_delta.item(), gen_error, model
 
 
 def optimizer_init(model, learning_rate, optimizer_name='Adam', scheduler_name='StepLR', epochs_number=int(1e6)):
+    """Define optimizer and learning rate scheduling for the training.
+    Can choose between SGD or Adam optimizer and step or plateau detection scheduling."""
+
     if optimizer_name == 'Adam':
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     elif optimizer_name == 'SGD':
