@@ -20,7 +20,7 @@ class DatasetClass:
         self.d = d
         self.current = 'D0'
         self.main_dir = main_dir
-        self.batch_size = int(2**16)
+        self.batch_size = int(2**20)
 
         self.big = self.P > self.batch_size
 
@@ -37,7 +37,7 @@ class DatasetClass:
         torch.save(self.D, self.main_dir + '/data/D0.pt')
         torch.save(self.labels, self.main_dir + '/data/labels.pt')
 
-    def build_dataset(self, N):
+    def build_dataset(self, N, normalize=True):
         """After training a model with total number of parameters N,
         builds new data-set from hidden layers' activations."""
 
@@ -51,7 +51,7 @@ class DatasetClass:
             d = param.shape[1]
             break
 
-        D_list = [self.D[:,:d]]
+        D_list = [self.D[:, :d]]
 
         for layer in model:
             D_list.append(layer(D_list[-1]))
@@ -59,11 +59,12 @@ class DatasetClass:
         self.length = len(D_list)
 
         for layer in range(1, len(D_list)):
-            torch.save(D_list[layer].detach(), self.main_dir + f'/data/D{layer}.pt')
+            D = D_list[layer].detach()
+            if normalize:
+                D = (D - D.mean()) / D.std()
+            torch.save(D, self.main_dir + f'/data/D{layer}.pt')
 
         del self.D, self.labels
-
-        return manual_count_params(model)
 
     def load(self, layer):
         """Load data-set for specified layer in the net."""
@@ -78,7 +79,7 @@ class DatasetClass:
     def __iter__(self):
         """Iterator to process batches and move them to GPU"""
         if not self.big:
-            yield self.D[:self.P, :self.d], self.labels
+            yield self.D[:self.P, :self.d], self.labels[:self.P]
         else:
             for i in range(int(self.P / self.batch_size)):
                 yield self.D[i*self.batch_size:min(self.P, (i+1)*self.batch_size), :self.d].cuda(), \
@@ -143,6 +144,42 @@ class ModelClass(ABC):
         return self.model(X)
 
 
+class Rectangular(ModelClass):
+    """Define a triangular neural network, i.e. the hidden layers' dimension
+    is constant with depth. Inherits from the abstract ModelClass."""
+    def __init__(self, P, r, d, L):
+        super().__init__()
+
+        self.L = L
+        self.h = find_h_rectangular_net(d, L, P, r)
+
+        if d != 0:
+            # If input dimension d is fixed we use it for the first layer
+            self.d = d
+            self.D0Flag = False
+        else:
+            self.D0Flag = True
+            self.d = self.h
+
+    def lr(self):
+        """Return the learning rate for the network depending on the size"""
+        return .1 / self.h ** 1.5
+
+    def define_layers(self):
+        """Define the network structure with PyTorch nn.sequential modules."""
+
+        if self.D0Flag:
+            self.d = self.h
+
+        self.layers = [nn.Sequential(nn.Linear(self.d, self.h),
+                                     nn.ReLU(), )]  # nn.BatchNorm1d(self.h, affine=False))]
+        for l in range(1, self.L):
+            self.layers.append(nn.Sequential(nn.Linear(self.h, self.h),
+                                             nn.ReLU(), ))  # nn.BatchNorm1d(self.h, affine=False)))
+
+        self.layers.append(nn.Linear(self.h, 1))
+
+
 class Triangular(ModelClass):
     """Define a triangular neural network, i.e. the hidden layers' dimension
     decreases with depth. Inherits from the abstract ModelClass."""
@@ -181,34 +218,6 @@ class Triangular(ModelClass):
             self.layers.append(nn.Sequential(nn.Linear(self.h - l, self.h - l - self.delta_h),
                                              nn.ReLU(), ))  # nn.BatchNorm1d( self.h - l - self.delta_h, affine=False)))
         self.layers.append(nn.Sequential(nn.Linear(self.h - l - self.delta_h, 1), nn.ReLU()))
-
-
-class Rectangular(ModelClass):
-    """Define a triangular neural network, i.e. the hidden layers' dimension
-    is constant with depth. Inherits from the abstract ModelClass."""
-    def __init__(self, P, r, d, L):
-        super().__init__()
-
-        self.L = L
-        self.h = find_h_rectangular_net(d, L, P, r)
-
-        if d != 0:
-            # If input dimension d is fixed we use it for the first layer
-            self.d = d
-        else:
-            self.d = self.h
-
-    def lr(self):
-        """Return the learning rate for the network depending on the size"""
-        return .1 / self.h ** 1.5
-
-    def define_layers(self):
-        """Define the network structure with PyTorch nn.sequential modules."""
-        self.layers = [nn.Sequential(nn.Linear(self.d, self.h), nn.ReLU(), )]
-        for l in range(1, self.L):
-            self.layers.append(nn.Sequential(nn.Linear(self.h, self.h), nn.ReLU(), ))
-
-        self.layers.append(nn.Linear(self.h, 1))
 
 
 class ResultsClass:

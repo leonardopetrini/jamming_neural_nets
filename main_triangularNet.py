@@ -1,4 +1,6 @@
-"""Version of the main file to use triangular networks"""
+"""
+Version of the main file to use triangular networks
+"""
 
 from experiment import *
 

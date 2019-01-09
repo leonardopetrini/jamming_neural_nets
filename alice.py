@@ -138,7 +138,7 @@ def timeit(f):
         bt = time()
         r = f(*args, **kwargs)
         et = time()
-        print("Time spent on {0}: {1:.2f}s".format(f.__name__, et - bt))
+        print("Time spent on {0}: {1:.2f} mins. ".format(f.__name__, (et - bt)/60))
         return r
     return new_f
 

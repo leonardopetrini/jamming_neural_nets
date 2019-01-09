@@ -26,6 +26,8 @@ def train_model(model, data, learning_rate=.005, epochs_number=int(1e6), gen_err
                 labels = labels.narrow(0, 0, int(.8 * X.shape[0]))
                 X = X.narrow(0, 0, int(.8 * X.shape[0]))
 
+                model.model.train()
+
             output = model(X)
             loss, N_delta = hinge_loss(output, labels)
             optimizer.zero_grad()
@@ -46,6 +48,7 @@ def train_model(model, data, learning_rate=.005, epochs_number=int(1e6), gen_err
 
     if gen_error_flag:
         with torch.no_grad():
+            model.model.eval()
             gen_error = ((model(test_) * test_labels) < 0).float().mean()
             gen_error = gen_error.item()
             print('Generalization error = {:0.3f} %'.format(gen_error * 100))

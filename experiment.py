@@ -1,6 +1,6 @@
-from classes import *
 from alice import *
 from train import *
+from classes import *
 
 
 class Experiment:
@@ -59,11 +59,14 @@ class Experiment:
             d_max = find_h_rectangular_net(0, self.L, self.P, self.r_min) + 1
 
         self.dataset = DatasetClass(P, d_max, self.main_dir)
+        self.results = ResultsClass(self.main_dir)
 
         if new_data:
             self.dataset.new()
+        # else:
+        #     self.results.load()
 
-        self.results = ResultsClass(self.main_dir)
+
 
     def save(self):
         pickle_save(self.__dict__, 'experiment', self.main_dir)
@@ -113,6 +116,8 @@ class Experiment:
             self.dataset.P = P
         else:
             P = self.P
+
+        # results_label += 'oneh'
 
         # Add a new entry to the results dictionary
         results_dict = self.results.new_results(results_label)
@@ -170,16 +175,38 @@ class Experiment:
             results_dict['N'].append(model.N)
             results_dict['r'].append(r)
 
-            if (not d and self.datatype == 'ov') or gen_error_flag:
-                # Dont need to find jamming, no jamming_margin needed
-                jamming_margin = -1
+            # >> Only for P
+            if d == 0:
                 break
 
-            model.reduce(steps=1)
+            if gen_error_flag:
+                # If we just want the gen error it stops to first net
+                break
 
-        self.results.save()
+            if model.h > 100:
+                steps = 10
+            elif model.h > 80:
+                steps = 5
+            elif model.h > 1:
+                steps = 1
+            else:
+                break
+
+            model.reduce(steps=steps)
 
         # If training the first layer construct dataset from activations
         if d == 0:
-            results_dict['Ns_jamming'] = self.dataset.build_dataset(model.N_list[-jamming_margin-1])
+            # results_dict['residual_net_size_at_jamming'] = manual_count_params(load_model(model.N_list[-jamming_margin-1], self.main_dir))
 
+            if self.datatype == 'ov':
+                # No jamming margin needed
+                jamming_margin = -1
+
+            # delete this , >>> only for P <<<
+            jamming_margin = 0
+
+            results_dict['residual_net_size_at_extraction'] = \
+                manual_count_params(load_model(model.N_list[-jamming_margin-1], self.main_dir))
+            self.dataset.build_dataset(model.N_list[-jamming_margin-1])
+
+        self.results.save()
